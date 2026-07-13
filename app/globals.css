@@ -1,10 +1,17 @@
 :root {
-  --bg: #0b0c10;
-  --bg-alt: #12141a;
-  --fg: #eef0f4;
-  --muted: #9aa1ac;
-  --accent: #ff8a4c;
-  --border: #23262f;
+  --cream: #faf6ef;
+  --cream-alt: #f1ead9;
+  --ink: #241f1a;
+  --ink-soft: #4a4038;
+  --muted: #6b6157;
+  --terracotta: #c1602e;
+  --terracotta-dark: #9c4a22;
+  --teal: #1f3a3d;
+  --teal-light: #2f5457;
+  --gold: #e8a94c;
+  --border: #e4dcc8;
+  --accent: #c1602e;
+
   --term-bg: #0a0a0a;
   --term-fg: #d8fbe0;
   --term-accent: #7ee2a8;
@@ -21,70 +28,270 @@ body {
 }
 
 body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.5;
 }
 
-main {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 24px 80px;
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), Georgia, serif;
+  color: var(--ink);
 }
 
+main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 24px 96px;
+  overflow-x: hidden;
+}
+
+/* Hero */
+
 .hero {
-  padding: 96px 0 56px;
-  text-align: center;
-  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 40px;
+  align-items: center;
+  padding: 56px;
+  margin-bottom: 64px;
+  background: linear-gradient(135deg, #fffdf8, var(--cream-alt));
+  border: 1px solid var(--border);
+  border-radius: 28px;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--terracotta-dark);
+  background: rgba(193, 96, 46, 0.1);
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-bottom: 20px;
+  font-weight: 600;
 }
 
 .hero h1 {
-  font-size: clamp(2.25rem, 5vw, 3.5rem);
-  margin: 0 0 12px;
-  letter-spacing: -0.02em;
-}
-
-.hero p {
-  color: var(--muted);
-  font-size: 1.15rem;
-  margin: 0;
-}
-
-.section {
-  padding: 56px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.section:last-of-type {
-  border-bottom: none;
-}
-
-.section h2 {
-  font-size: 1.5rem;
+  font-weight: 600;
+  font-size: clamp(2.2rem, 4.2vw, 3.4rem);
+  line-height: 1.1;
   margin: 0 0 20px;
 }
 
-.section ol {
-  color: var(--muted);
-  padding-left: 20px;
+.hero h1 em {
+  font-style: italic;
+  color: var(--terracotta);
 }
 
-.section ol li {
-  margin-bottom: 8px;
+.hero-sub {
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+  max-width: 46ch;
+  margin: 0 0 32px;
+  line-height: 1.6;
 }
+
+.hero-actions {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-primary {
+  background: var(--terracotta);
+  color: #fff8ee;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(193, 96, 46, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(193, 96, 46, 0.32);
+}
+
+.btn-secondary {
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 14px 2px;
+  border-bottom: 2px solid var(--border);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--terracotta);
+  color: var(--terracotta-dark);
+}
+
+.hero-art {
+  width: 100%;
+  height: auto;
+  border-radius: 20px;
+  box-shadow: 0 20px 44px rgba(36, 31, 26, 0.14);
+}
+
+/* Sections */
+
+.section {
+  padding: 40px 0;
+}
+
+.section-heading {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.section-heading h2 {
+  font-size: 1.9rem;
+  margin: 0 0 8px;
+}
+
+.section-heading p {
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Destinations */
+
+.destinations {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.destination-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.destination-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(36, 31, 26, 0.1);
+}
+
+.destination-art {
+  width: 100%;
+  height: 120px;
+  display: block;
+}
+
+.destination-body {
+  padding: 18px 18px 22px;
+}
+
+.destination-body h3 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.destination-body p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+/* How it works */
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.step {
+  background: var(--cream-alt);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 26px;
+}
+
+.step-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.step-number {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
+  font-size: 1.3rem;
+  color: var(--terracotta);
+}
+
+.step-icon svg {
+  width: 22px;
+  height: 22px;
+  color: var(--teal);
+}
+
+.step h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.step p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+/* Why Wanderlust cards */
 
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
 }
 
 .card {
-  background: var(--bg-alt);
+  background: #fff;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 20px;
+  border-radius: 18px;
+  padding: 26px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px rgba(36, 31, 26, 0.08);
+}
+
+.card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(31, 58, 61, 0.08);
+  color: var(--teal);
+  margin-bottom: 14px;
+}
+
+.card-icon svg {
+  width: 22px;
+  height: 22px;
 }
 
 .card h3 {
@@ -95,14 +302,64 @@ main {
 .card p {
   margin: 0;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
 }
 
+/* Footer */
+
 .footer {
-  text-align: center;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
   color: var(--muted);
   font-size: 0.85rem;
   padding-top: 40px;
+  margin-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
+/* Responsive */
+
+@media (max-width: 860px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 40px 28px;
+    text-align: center;
+  }
+
+  .hero-sub {
+    max-width: none;
+    margin-inline: auto;
+  }
+
+  .hero-actions {
+    justify-content: center;
+  }
+
+  .hero-art {
+    order: -1;
+    max-width: 360px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 780px) {
+  .destinations {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .steps,
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .destinations {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Floating travel agent widget */
@@ -116,15 +373,25 @@ main {
   border-radius: 50%;
   border: none;
   background: var(--accent);
-  color: #14110c;
+  color: #fff8ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.4rem;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 10px 26px rgba(193, 96, 46, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   z-index: 50;
 }
 
 .widget-toggle:hover {
-  filter: brightness(1.05);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 14px 32px rgba(193, 96, 46, 0.48);
+}
+
+.widget-toggle-icon {
+  width: 24px;
+  height: 24px;
 }
 
 .widget-window {
@@ -152,13 +419,13 @@ main {
   border-bottom: 1px solid #262626;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.8rem;
-  color: var(--muted);
+  color: #9aa1ac;
 }
 
 .widget-header button {
   background: none;
   border: 1px solid #33353b;
-  color: var(--muted);
+  color: #9aa1ac;
   border-radius: 4px;
   width: 22px;
   height: 22px;

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { OPEN_WIDGET_EVENT } from "@/components/OpenWidgetButton";
+import { PlaneIcon } from "@/components/illustrations";
 
 type TripInfo = {
   origin: string;
@@ -140,6 +142,12 @@ export default function TravelAgentWidget() {
     if (phase === "chat") chatRef.current?.focus();
   }, [open, qIndex, phase]);
 
+  useEffect(() => {
+    const openFromOutside = () => setOpen(true);
+    window.addEventListener(OPEN_WIDGET_EVENT, openFromOutside);
+    return () => window.removeEventListener(OPEN_WIDGET_EVENT, openFromOutside);
+  }, []);
+
   const question = qIndex < QUESTIONS.length ? QUESTIONS[qIndex] : null;
 
   function appendLine(line: Line) {
@@ -266,7 +274,7 @@ export default function TravelAgentWidget() {
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close travel agent" : "Open travel agent"}
       >
-        {open ? "✕" : "✈"}
+        {open ? "✕" : <PlaneIcon className="widget-toggle-icon" />}
       </button>
 
       {open && (
