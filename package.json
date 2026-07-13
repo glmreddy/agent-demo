@@ -5,10 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "ingest": "node scripts/ingest_knowledge_base.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",
+    "@vercel/blob": "^2.6.1",
+    "dotenv": "^17.4.2",
     "next": "^16.2.10",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"

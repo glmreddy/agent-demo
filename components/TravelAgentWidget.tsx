@@ -69,11 +69,51 @@ const EMPTY_INFO: TripInfo = {
 };
 
 type Line = { text: string; kind: "system" | "prompt" | "output" | "error" };
+type Turn = { role: "user" | "assistant"; text: string };
+type Phase = "asking" | "planning" | "chat" | "chat-working";
 
 function nextQuestionIndex(info: TripInfo, fromIndex: number): number {
   let idx = fromIndex;
   while (idx < QUESTIONS.length && QUESTIONS[idx].skip?.(info)) idx++;
   return idx;
+}
+
+function summarizeTrip(info: TripInfo): string {
+  const parts: string[] = [];
+  parts.push(`from ${info.origin || "n/a"}`);
+  parts.push(info.destination ? `to ${info.destination}` : "open to destination suggestions");
+  if (info.region_preference) parts.push(`preferring ${info.region_preference}`);
+  if (info.travel_dates) parts.push(`traveling ${info.travel_dates}`);
+  if (info.trip_length) parts.push(`for ${info.trip_length} days`);
+  if (info.travelers) parts.push(`with ${info.travelers}`);
+  if (info.budget) parts.push(`budget ${info.budget}`);
+  if (info.interests) parts.push(`interested in ${info.interests}`);
+  if (info.constraints) parts.push(`constraints: ${info.constraints}`);
+  return `Plan a vacation ${parts.join(", ")}.`;
+}
+
+async function streamToLastLine(
+  res: Response,
+  setLinesFn: React.Dispatch<React.SetStateAction<Line[]>>
+): Promise<string> {
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let full = "";
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    full += chunk;
+    setLinesFn((prev) => {
+      const copy = [...prev];
+      const last = copy[copy.length - 1];
+      copy[copy.length - 1] = { ...last, text: last.text + chunk };
+      return copy;
+    });
+  }
+
+  return full;
 }
 
 export default function TravelAgentWidget() {
@@ -82,17 +122,22 @@ export default function TravelAgentWidget() {
   const [info, setInfo] = useState<TripInfo>(EMPTY_INFO);
   const [qIndex, setQIndex] = useState(0);
   const [inputValue, setInputValue] = useState("");
-  const [phase, setPhase] = useState<"asking" | "working" | "done">("asking");
+  const [chatValue, setChatValue] = useState("");
+  const [phase, setPhase] = useState<Phase>("asking");
+  const [history, setHistory] = useState<Turn[]>([]);
 
   const bodyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const chatRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight });
   }, [lines]);
 
   useEffect(() => {
-    if (open && phase === "asking") inputRef.current?.focus();
+    if (!open) return;
+    if (phase === "asking") inputRef.current?.focus();
+    if (phase === "chat") chatRef.current?.focus();
   }, [open, qIndex, phase]);
 
   const question = qIndex < QUESTIONS.length ? QUESTIONS[qIndex] : null;
@@ -123,7 +168,6 @@ export default function TravelAgentWidget() {
           text: "\nI need at least a departure city or a destination to help. Refresh to try again.",
           kind: "error",
         });
-        setPhase("done");
         return;
       }
       setQIndex(idx);
@@ -134,10 +178,11 @@ export default function TravelAgentWidget() {
   }
 
   async function runPlan(finalInfo: TripInfo) {
-    setPhase("working");
+    setPhase("planning");
     appendLine({
       text:
-        "\nWorking on your vacation plan (this can take a bit while I check flights and destinations)...\n",
+        "\nWorking on your vacation plan (this can take a bit while I check flights, " +
+        "destinations, and policies)...\n",
       kind: "system",
     });
 
@@ -151,30 +196,66 @@ export default function TravelAgentWidget() {
       if (!res.ok || !res.body) {
         const text = await res.text();
         appendLine({ text: `Error: ${text}`, kind: "error" });
-        setPhase("done");
+        setPhase("chat");
         return;
       }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
       appendLine({ text: "", kind: "output" });
+      const planText = await streamToLastLine(res, setLines);
 
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        setLines((prev) => {
-          const copy = [...prev];
-          const last = copy[copy.length - 1];
-          copy[copy.length - 1] = { ...last, text: last.text + chunk };
-          return copy;
-        });
-      }
+      setHistory([
+        { role: "user", text: summarizeTrip(finalInfo) },
+        { role: "assistant", text: planText },
+      ]);
+      appendLine({
+        text:
+          "\n(You can now ask follow-up questions below — including about " +
+          "cancellation, baggage, or insurance policy.)",
+        kind: "system",
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       appendLine({ text: `\n[Connection error: ${message}]`, kind: "error" });
     } finally {
-      setPhase("done");
+      setPhase("chat");
+    }
+  }
+
+  async function handleChatSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const question = chatValue.trim();
+    if (!question || phase !== "chat") return;
+
+    appendLine({ text: `\nAsk a follow-up question: ${question}`, kind: "prompt" });
+    setChatValue("");
+    setPhase("chat-working");
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ history, question }),
+      });
+
+      if (!res.ok || !res.body) {
+        const text = await res.text();
+        appendLine({ text: `Error: ${text}`, kind: "error" });
+        return;
+      }
+
+      appendLine({ text: "", kind: "output" });
+      const answerText = await streamToLastLine(res, setLines);
+
+      setHistory((prev) => [
+        ...prev,
+        { role: "user", text: question },
+        { role: "assistant", text: answerText },
+      ]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      appendLine({ text: `\n[Connection error: ${message}]`, kind: "error" });
+    } finally {
+      setPhase("chat");
     }
   }
 
@@ -215,6 +296,23 @@ export default function TravelAgentWidget() {
                   className="widget-input"
                   autoComplete="off"
                   spellCheck={false}
+                />
+              </form>
+            )}
+            {(phase === "chat" || phase === "chat-working") && (
+              <form onSubmit={handleChatSubmit} className="widget-input-row">
+                <span className="widget-prompt-label">
+                  {phase === "chat-working" ? "Thinking…" : "Ask a follow-up:"}
+                </span>
+                <input
+                  ref={chatRef}
+                  value={chatValue}
+                  onChange={(e) => setChatValue(e.target.value)}
+                  className="widget-input"
+                  autoComplete="off"
+                  spellCheck={false}
+                  disabled={phase === "chat-working"}
+                  placeholder="e.g. What's the baggage policy for a connecting flight?"
                 />
               </form>
             )}
