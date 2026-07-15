@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Fraunces, Work_Sans } from "next/font/google";
+import NavBar from "@/components/NavBar";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -26,7 +27,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${fraunces.variable} ${workSans.variable}`}>
-      <body>{children}</body>
+      <body>
+        <NavBar />
+        {children}
+      </body>
     </html>
   );
 }
