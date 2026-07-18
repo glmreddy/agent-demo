@@ -2,6 +2,7 @@ import * as importCtl from "../import/importController.js";
 import { getCategoryById } from "../data/categories.js";
 import { formatUSD } from "../core/money.js";
 import { showToast } from "../utils/toast.js";
+import { exportAllAsCSV, exportAllAsJSON } from "../utils/export.js";
 
 let activeTab = "expense";
 
@@ -24,10 +25,27 @@ function render() {
       <button class="btn ${activeTab === "income" ? "btn-primary" : ""}" id="tab-income" type="button">Income Import</button>
     </div>
     <div id="import-panel-root"></div>
+
+    <div class="card mt-2">
+      <h3>Export Data</h3>
+      <p class="text-muted">Download everything — transactions, income, category mapping, budgets, and payment cycles.</p>
+      <div class="modal-actions" style="justify-content:flex-start">
+        <button class="btn" id="btn-export-csv" type="button">Export as CSV</button>
+        <button class="btn" id="btn-export-json" type="button">Export as JSON</button>
+      </div>
+    </div>
   `;
 
   section.querySelector("#tab-expense").addEventListener("click", () => { activeTab = "expense"; render(); });
   section.querySelector("#tab-income").addEventListener("click", () => { activeTab = "income"; render(); });
+  section.querySelector("#btn-export-csv").addEventListener("click", () => {
+    exportAllAsCSV();
+    showToast("CSV export downloaded", "success");
+  });
+  section.querySelector("#btn-export-json").addEventListener("click", () => {
+    exportAllAsJSON();
+    showToast("JSON export downloaded", "success");
+  });
 
   mountPanel(document.getElementById("import-panel-root"), activeTab);
 }
