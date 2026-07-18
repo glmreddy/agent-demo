@@ -1,0 +1,11 @@
+{
+  "name": "whereismymoney",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Personal finance SPA — automatic classification of bank/credit-card spend into budget categories.",
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve .",
+    "test": "node --test test/*.test.js"
+  }
+}
