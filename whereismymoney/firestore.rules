@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// Per-user data isolation: every read/write under users/{userId}/** requires
+// the caller's Firebase Auth uid to match that path segment. No user's data
+// is ever readable by another (NFR). Deploy via Firebase Console ->
+// Firestore Database -> Rules, or `firebase deploy --only firestore:rules`
+// if you use the Firebase CLI. See README.md -> "Firebase setup".
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+
+      match /expenses/{expenseId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /income/{incomeId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /category_mapping/{mappingId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /config/{configId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Everything else under a user's document tree is denied by default
+      // (no catch-all rule declared).
+    }
+  }
+}
