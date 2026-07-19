@@ -8,4 +8,4 @@
 // Leave as null to disable folder import (Sheets + single-file import still
 // work fully without it).
 // ---------------------------------------------------------------------------
-export const GOOGLE_API_KEY = null;
+export const GOOGLE_API_KEY = "AIzaSyCNGIU92V6xRy4VHSPgdgvrwqKPshQHEjY";

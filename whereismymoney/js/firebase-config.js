@@ -13,16 +13,17 @@
 // (deployed separately to your Firebase project), not by hiding this object.
 // ---------------------------------------------------------------------------
 export const firebaseConfig = {
-  apiKey: "PLACEHOLDER_GET_FROM_FIREBASE_CONSOLE",
-  authDomain: "PLACEHOLDER.firebaseapp.com",
-  projectId: "PLACEHOLDER",
-  storageBucket: "PLACEHOLDER.appspot.com",
-  messagingSenderId: "PLACEHOLDER",
-  appId: "PLACEHOLDER",
+  apiKey: "AIzaSyCNGIU92V6xRy4VHSPgdgvrwqKPshQHEjY",
+  authDomain: "whereismymoney-firebase.firebaseapp.com",
+  projectId: "whereismymoney-firebase",
+  storageBucket: "whereismymoney-firebase.firebasestorage.app",
+  messagingSenderId: "1011385302272",
+  appId: "1:1011385302272:web:c8dcac1200dd8e8ebf07e5",
+  measurementId: "G-JMZNQY6YW5"
 };
 
 export const isFirebaseConfigured = () =>
-  !Object.values(firebaseConfig).some((v) => String(v).startsWith("PLACEHOLDER"));
+  !Object.values(firebaseConfig).some((v) => String(v).startsWith("PLACEHOLDER") || String(v).startsWith("YOUR_"));
 
 // ---------------------------------------------------------------------------
 // Firebase SDK init (v10 modular, loaded directly from the CDN as ES
