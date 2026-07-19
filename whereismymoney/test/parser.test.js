@@ -127,6 +127,28 @@ test("parses text-month dates like \"02 Jan '26\" and \"Jan 02, 2026\"", () => {
   assert.equal(parseDate("Jan 02, 2026", "MM/DD"), "2026-01-02");
 });
 
+test("parses year-omitted text dates like \"Jun 10\" and \"10 Jun\", inferring the year", () => {
+  const thisYear = new Date().getFullYear();
+  assert.equal(parseDate("Jun 10", "MM/DD"), `${thisYear}-06-10`);
+  assert.equal(parseDate("10 Jun", "MM/DD"), `${thisYear}-06-10`);
+});
+
+test("year-omitted dates in the future roll back to last year (statement spanning a year boundary)", () => {
+  const now = new Date();
+  if (now.getMonth() === 11 && now.getDate() === 31) return; // no "future" to prove on Dec 31 itself
+  const currentYear = now.getFullYear();
+  const candidateThisYear = new Date(currentYear, 11, 31); // Dec 31 is always >= today except on Dec 31
+  const expectedYear = candidateThisYear > now ? currentYear - 1 : currentYear;
+  assert.equal(parseDate("Dec 31", "MM/DD"), `${expectedYear}-12-31`);
+});
+
+test("looksLikeDate recognizes year-omitted text dates but not random two-word text", () => {
+  assert.equal(looksLikeDate("Jun 10"), true);
+  assert.equal(looksLikeDate("10 Jun"), true);
+  assert.equal(looksLikeDate("50 Off"), false);
+  assert.equal(looksLikeDate("Big Mac"), false);
+});
+
 test("rejects invalid dates (e.g. day 31 in a 30-day month)", () => {
   assert.equal(parseDate("31/02/2026", "DD/MM"), null);
   assert.equal(parseDate("not a date", "MM/DD"), null);

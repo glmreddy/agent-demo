@@ -24,6 +24,8 @@ const NUMERIC_DATE_RE = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/;
 const ISO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})/;
 const TEXT_DATE_RE_1 = /^(\d{1,2})\s+([A-Za-z]{3,9})[,'\s]*\s*(\d{2,4})$/; // "02 Jan '26"
 const TEXT_DATE_RE_2 = /^([A-Za-z]{3,9})\s+(\d{1,2}),?\s*(\d{2,4})$/; // "Jan 02, 2026"
+const TEXT_DATE_NO_YEAR_RE_1 = /^(\d{1,2})\s+([A-Za-z]{3,9})$/; // "10 Jun" (year omitted)
+const TEXT_DATE_NO_YEAR_RE_2 = /^([A-Za-z]{3,9})\s+(\d{1,2})$/; // "Jun 10" (year omitted)
 const TEXT_DATE_PLAUSIBLE_RE = /^\d{1,2}\s+[A-Za-z]{3,9}[,'\s]*\d{2,4}$/;
 const TEXT_DATE_PLAUSIBLE_RE_2 = /^[A-Za-z]{3,9}\s+\d{1,2},?\s*\d{2,4}$/;
 
@@ -31,6 +33,23 @@ const MONTHS = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
   jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
 };
+
+function isMonthToken(token) {
+  return MONTHS[String(token || "").toLowerCase().slice(0, 3)] !== undefined;
+}
+
+/**
+ * Infers the year for a month/day with no year given (e.g. "Jun 10") — many
+ * card-issuer "recent activity" exports omit it. Assumes the current year,
+ * unless that would land in the future, in which case it's last year's
+ * transaction (handles statements spanning a Dec/Jan year boundary).
+ */
+function inferYear(month, day) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const candidate = new Date(currentYear, month - 1, day);
+  return candidate > now ? currentYear - 1 : currentYear;
+}
 
 // ============================================================
 // Column analysis
@@ -41,12 +60,21 @@ export function looksLikeDate(raw) {
   if (typeof raw === "number") return false;
   const s = String(raw ?? "").trim();
   if (!s) return false;
-  return (
+  if (
     ISO_DATE_RE.test(s) ||
     NUMERIC_DATE_RE.test(s) ||
     TEXT_DATE_PLAUSIBLE_RE.test(s) ||
     TEXT_DATE_PLAUSIBLE_RE_2.test(s)
-  );
+  ) {
+    return true;
+  }
+
+  const noYear1 = s.match(TEXT_DATE_NO_YEAR_RE_1);
+  if (noYear1 && isMonthToken(noYear1[2])) return true;
+  const noYear2 = s.match(TEXT_DATE_NO_YEAR_RE_2);
+  if (noYear2 && isMonthToken(noYear2[1])) return true;
+
+  return false;
 }
 
 function stripAmountToken(raw) {
@@ -259,6 +287,24 @@ export function parseDate(raw, format) {
     const p1 = Number(m[1]), p2 = Number(m[2]), y = expandYear(Number(m[3]));
     const [mo, d] = format === "DD/MM" ? [p2, p1] : [p1, p2];
     return isValidDate(y, mo, d) ? `${y}-${pad(mo)}-${pad(d)}` : null;
+  }
+
+  // Year-omitted text dates (e.g. "10 Jun" / "Jun 10") — common in
+  // card-issuer "recent activity" exports. Year is inferred.
+  m = s.match(TEXT_DATE_NO_YEAR_RE_1);
+  if (m && isMonthToken(m[2])) {
+    const mon = MONTHS[m[2].toLowerCase().slice(0, 3)];
+    const d = Number(m[1]);
+    const y = inferYear(mon, d);
+    return isValidDate(y, mon, d) ? `${y}-${pad(mon)}-${pad(d)}` : null;
+  }
+
+  m = s.match(TEXT_DATE_NO_YEAR_RE_2);
+  if (m && isMonthToken(m[1])) {
+    const mon = MONTHS[m[1].toLowerCase().slice(0, 3)];
+    const d = Number(m[2]);
+    const y = inferYear(mon, d);
+    return isValidDate(y, mon, d) ? `${y}-${pad(mon)}-${pad(d)}` : null;
   }
 
   return null;
